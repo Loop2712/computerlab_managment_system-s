@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 
 First, run the development server:
 
 ```bash
+npm i
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+```bash
+src/
+|-- app/
+|   |-- layout.tsx                  // Layout หลัก
+|   |-- page.tsx                    // หน้า Home
+|   |-- login/                      // หน้าเข้าสู่ระบบ
+|       |-- page.tsx
+|   |-- about/                      // หน้าข้อมูลระบบ
+|       |-- page.tsx
+|   |-- room-status/                // หน้าแสดงสถานะห้องเรียน
+|       |-- page.tsx
+|   |-- admin/                      // โซนสำหรับแอดมิน
+|       |-- dashboard/              // หน้าแดชบอร์ด
+|           |-- page.tsx
+|       |-- manage-rooms/           // หน้าจัดการห้อง
+|           |-- page.tsx
+|       |-- manage-users/           // หน้าจัดการผู้ใช้
+|           |-- page.tsx
+|       |-- manage-schedules/       // หน้าจัดการตารางเรียน
+|           |-- page.tsx
+|       |-- manage-bookings/        // หน้าตรวจสอบการจอง
+|           |-- page.tsx
+|       |-- reports/                // หน้ารายงาน
+|           |-- page.tsx
+|   |-- teacher/                    // โซนสำหรับอาจารย์
+|       |-- dashboard/              // หน้าแดชบอร์ดส่วนตัว
+|           |-- page.tsx
+|       |-- book-room/              // หน้าจองห้อง
+|           |-- page.tsx
+|       |-- view-bookings/          // หน้าตรวจสอบการจอง
+|           |-- page.tsx
+|       |-- approve-bookings/       // หน้าอนุมัติการจอง
+|           |-- page.tsx
+|   |-- student/                    // โซนสำหรับนักศึกษา
+|       |-- dashboard/              // หน้าแดชบอร์ดส่วนตัว
+|           |-- page.tsx
+|       |-- view-schedule/          // หน้าตรวจสอบตารางเรียน
+|           |-- page.tsx
+|       |-- booking-history/        // หน้าประวัติการจอง
+|           |-- page.tsx
+|       |-- book-room/              // หน้าจองห้อง
+|           |-- page.tsx
+|-- components/                     // UI Components ที่ใช้ร่วมกัน
+|   |-- Navbar.tsx
+|   |-- Sidebar.tsx
+|   |-- RoomTable.tsx
+|   |-- BookingForm.tsx
+|   |-- UserTable.tsx
+|-- utils/                          // Utilities ต่าง ๆ
+|   |-- api.ts                      // ฟังก์ชันสำหรับเรียก API
+|   |-- auth.ts                     // ฟังก์ชันจัดการ Authentication
+|   |-- formatDate.ts               // Utility สำหรับจัดการวันที่
+|-- styles/                         // ไฟล์ CSS หรือ Tailwind configuration
+|-- prisma/                         // Prisma Schema และ Client
+|   |-- schema.prisma
+|   |-- client.ts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
