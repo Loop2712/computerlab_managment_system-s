@@ -9,110 +9,105 @@ datasource db {
 }
 
 model User {
-  id        BigInt       @id
+  id        BigInt    @id 
   firstName String
   lastName  String
-  role      Role
+  role      Role      @default(Student)
   email     String    @unique
   password  String
-  semesters UserSemester[]
+  userSemesters UserSemester[]
   bookings  Booking[]
-  transactionsBorrowed Transaction[] @relation("BorrowedBy")
-  transactionsReturned Transaction[] @relation("ReturnedBy")
-  roomSchedules  RoomSchedule[]
+  transactionsBorrowed Transaction[] @relation("Borrower")
+  transactionsReturned Transaction[] @relation("Returner")
 }
 
 model Room {
-  id              Int           @id @default(autoincrement())
+  id              String       @id
   name            String
   type            RoomType
+  description     String?
   requiresApproval Boolean
-  schedules       RoomSchedule[]
+  roomSchedules   RoomSchedule[]
   bookings        Booking[]
   transactions    Transaction[]
 }
 
-model RoomSchedule {
-  id          Int       @id @default(autoincrement())
-  roomId      Int
-  courseName  String
-  teacherId   BigInt
-  scheduleDate DateTime
-  startTime   DateTime
-  endTime     DateTime
-
-  room        Room      @relation(fields: [roomId], references: [id])
-  teacher     User      @relation(fields: [teacherId], references: [id])
-  enrollments Enrollment[]
-  transactions  Transaction[]
+model Enrollment {
+  id               Int          @id @default(autoincrement())
+  userSemesterId   Int
+  roomScheduleId   String
+  enrollmentDate   DateTime
+  userSemester     UserSemester @relation(fields: [userSemesterId], references: [id])
+  roomSchedule     RoomSchedule @relation(fields: [roomScheduleId], references: [id])
 }
 
 model Booking {
-  id        Int       @id @default(autoincrement())
-  userId    BigInt
-  roomId    Int
+  id         Int          @id @default(autoincrement())
+  userId     BigInt       
+  roomId     String
   bookingDate DateTime
-  startTime DateTime
-  endTime   DateTime
-  status    BookingStatus
-
-  user      User      @relation(fields: [userId], references: [id])
-  room      Room      @relation(fields: [roomId], references: [id])
-  transactions Transaction[]
-}
-
-model Transaction {
-  id                Int       @id @default(autoincrement())
-  userId            BigInt
-  roomId            Int
-  borrowDate        DateTime
-  borrowTime        DateTime
-  returnDate        DateTime?
-  returnTime        DateTime?
-  relatedBookingId  Int?      @unique
-  relatedScheduleId Int?      @unique
-  returnedById      BigInt?
-
-  borrower          User      @relation("BorrowedBy", fields: [userId], references: [id])
-  returnedBy        User?     @relation("ReturnedBy", fields: [returnedById], references: [id])
-  room              Room      @relation(fields: [roomId], references: [id])
-  booking           Booking?  @relation(fields: [relatedBookingId], references: [id])
-  schedule          RoomSchedule? @relation(fields: [relatedScheduleId], references: [id])
+  startTime  DateTime
+  endTime    DateTime
+  status     BookingStatus
+  user       User         @relation(fields: [userId], references: [id])
+  room       Room         @relation(fields: [roomId], references: [id])
 }
 
 model UserSemester {
-  id       Int       @id @default(autoincrement())
-  userId   BigInt
-  semester String
-  createdAt DateTime @default(now())
-
-  user      User      @relation(fields: [userId], references: [id])
+  id          Int       @id @default(autoincrement())
+  userId      BigInt       
+  semester    String
+  createdAt   DateTime   @default(now())
+  user        User       @relation(fields: [userId], references: [id])
   enrollments Enrollment[]
 }
 
-model Enrollment {
-  id               Int           @id @default(autoincrement())
-  userSemesterId   Int
-  roomScheduleId   Int
-  enrollmentDate   DateTime
-
-  userSemester     UserSemester  @relation(fields: [userSemesterId], references: [id])
-  roomSchedule     RoomSchedule  @relation(fields: [roomScheduleId], references: [id])
+model RoomSchedule {
+  id           String     @id
+  roomId       String
+  courseName   String
+  teacherName  String
+  scheduleDate DateTime
+  startTime    DateTime
+  endTime      DateTime
+  semester     String
+  room         Room       @relation(fields: [roomId], references: [id])
+  enrollments  Enrollment[]
 }
 
+model Transaction {
+  id                     Int           @id @default(autoincrement())
+  borrowerId             BigInt       
+  returnerId             BigInt?
+  roomId                 String
+  transactionType        TransactionType
+  transactionDate        DateTime
+  transactionTime        DateTime
+  relatedTransactionId   Int?
+  borrower               User          @relation("Borrower", fields: [borrowerId], references: [id])
+  returner               User?         @relation("Returner", fields: [returnerId], references: [id])
+  room                   Room          @relation(fields: [roomId], references: [id])
+  relatedTransaction     Transaction?  @relation("RelatedTransaction", fields: [relatedTransactionId], references: [id])
+  relatedTransactionBack Transaction[] @relation("RelatedTransaction")
+}
 enum Role {
-  student
-  teacher
-  admin
+  Student
+  Teacher
+  Admin
 }
 
 enum RoomType {
-  lecture
-  lab
+  Lecture
+  Lab
 }
 
 enum BookingStatus {
-  pending
-  approved
-  denied
+  Pending
+  Approved
+  Denied
+}
+
+enum TransactionType {
+  Borrow
+  Return
 }

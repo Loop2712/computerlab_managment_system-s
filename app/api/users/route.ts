@@ -1,69 +1,66 @@
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
+import { z } from 'zod';
+import { serializeBigInt } from '@/utils/BigIntuser';
+
+// Schema Validation
+const userSchema = z.object({
+  firstName: z.string().nonempty("First name is required"),
+  lastName: z.string().nonempty("Last name is required"),
+  email: z.string().email("Invalid email format"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  role: z.enum(['Admin', 'Teacher', 'Student'], "Invalid role"),
+});
 
 // GET Users
 export async function GET() {
   try {
-    const usersRaw = await prisma.user.findMany();
-
-    // Convert BigInt to String for all users
-    const users = usersRaw.map(user => ({
-      ...user,
-      id: user.id.toString(),
-    }));
-
-    return NextResponse.json(users, { status: 200 });
+    const users = await prisma.user.findMany();
+    // แปลง BigInt เป็น String
+    return NextResponse.json(serializeBigInt(users), { status: 200 });
   } catch (error) {
-    console.error('Error fetching users:', error);
-    return NextResponse.json({ error: 'Error fetching users', details: (error as Error).message }, { status: 400 });
+    return NextResponse.json({ error: 'Error fetching users', details: (error as Error).message }, { status: 500 });
   }
 }
 
-// Create User
+// POST User
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { id, firstName, lastName, role, email, password } = body;
+    const { id, firstName, lastName, email, password, role } = body;
 
-    // Validate input fields
-    if (!firstName || !lastName || !role || !email || !password) {
+    // ตรวจสอบข้อมูลที่จำเป็น
+    if (!id || !firstName || !lastName || !email || !password || !role) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
     }
 
-    // Optional: Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
+    // ตรวจสอบ email ซ้ำ
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return NextResponse.json({ error: 'Email already exists' }, { status: 400 });
     }
 
-    // Hash the password
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Convert id to BigInt (if provided, else let Prisma handle ID generation)
-    const userId = id ? BigInt(id) : undefined;
-
+    // เพิ่มข้อมูลผู้ใช้
     const user = await prisma.user.create({
       data: {
-        id: userId,
+        id: BigInt(id), // แปลง id เป็น BigInt
         firstName,
         lastName,
-        role,
         email,
         password: hashedPassword,
+        role, // Role ที่ผ่านการตรวจสอบแล้ว
       },
     });
 
-    // Convert BigInt to String in the response
-    const sanitizedUser = {
-      ...user,
-      id: user.id.toString(),
-    };
-
-    return NextResponse.json(sanitizedUser, { status: 201 });
+    // แปลง BigInt เป็น String ใน Response
+    return NextResponse.json(serializeBigInt(user), { status: 201 });
   } catch (error) {
-    console.error('Error creating user:', error);
-    return NextResponse.json({ error: 'Error creating user', details: (error as Error).message }, { status: 400 });
+    return NextResponse.json({ error: 'Error creating user', details: (error as Error).message }, { status: 500 });
   }
 }
+
 
