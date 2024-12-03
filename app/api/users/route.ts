@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
 import { serializeBigInt } from '@/utils/BigIntuser';
+import { User } from '@/types';
 
 // Schema Validation
 const userSchema = z.object({
