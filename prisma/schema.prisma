@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        BigInt       @id
+  firstName String
+  lastName  String
+  role      Role
+  email     String    @unique
+  password  String
+  semesters UserSemester[]
+  bookings  Booking[]
+  transactionsBorrowed Transaction[] @relation("BorrowedBy")
+  transactionsReturned Transaction[] @relation("ReturnedBy")
+  roomSchedules  RoomSchedule[]
+}
+
+model Room {
+  id              Int           @id @default(autoincrement())
+  name            String
+  type            RoomType
+  requiresApproval Boolean
+  schedules       RoomSchedule[]
+  bookings        Booking[]
+  transactions    Transaction[]
+}
+
+model RoomSchedule {
+  id          Int       @id @default(autoincrement())
+  roomId      Int
+  courseName  String
+  teacherId   BigInt
+  scheduleDate DateTime
+  startTime   DateTime
+  endTime     DateTime
+
+  room        Room      @relation(fields: [roomId], references: [id])
+  teacher     User      @relation(fields: [teacherId], references: [id])
+  enrollments Enrollment[]
+  transactions  Transaction[]
+}
+
+model Booking {
+  id        Int       @id @default(autoincrement())
+  userId    BigInt
+  roomId    Int
+  bookingDate DateTime
+  startTime DateTime
+  endTime   DateTime
+  status    BookingStatus
+
+  user      User      @relation(fields: [userId], references: [id])
+  room      Room      @relation(fields: [roomId], references: [id])
+  transactions Transaction[]
+}
+
+model Transaction {
+  id                Int       @id @default(autoincrement())
+  userId            BigInt
+  roomId            Int
+  borrowDate        DateTime
+  borrowTime        DateTime
+  returnDate        DateTime?
+  returnTime        DateTime?
+  relatedBookingId  Int?      @unique
+  relatedScheduleId Int?      @unique
+  returnedById      BigInt?
+
+  borrower          User      @relation("BorrowedBy", fields: [userId], references: [id])
+  returnedBy        User?     @relation("ReturnedBy", fields: [returnedById], references: [id])
+  room              Room      @relation(fields: [roomId], references: [id])
+  booking           Booking?  @relation(fields: [relatedBookingId], references: [id])
+  schedule          RoomSchedule? @relation(fields: [relatedScheduleId], references: [id])
+}
+
+model UserSemester {
+  id       Int       @id @default(autoincrement())
+  userId   BigInt
+  semester String
+  createdAt DateTime @default(now())
+
+  user      User      @relation(fields: [userId], references: [id])
+  enrollments Enrollment[]
+}
+
+model Enrollment {
+  id               Int           @id @default(autoincrement())
+  userSemesterId   Int
+  roomScheduleId   Int
+  enrollmentDate   DateTime
+
+  userSemester     UserSemester  @relation(fields: [userSemesterId], references: [id])
+  roomSchedule     RoomSchedule  @relation(fields: [roomScheduleId], references: [id])
+}
+
+enum Role {
+  student
+  teacher
+  admin
+}
+
+enum RoomType {
+  lecture
+  lab
+}
+
+enum BookingStatus {
+  pending
+  approved
+  denied
+}
