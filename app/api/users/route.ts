@@ -2,7 +2,7 @@ import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
-import { serializeBigInt } from '@/utils/BigIntuser';
+import { transformBigInt } from '@/utils/BigInt';
 import { User } from '@/types';
 
 // Schema Validation
@@ -19,7 +19,8 @@ export async function GET() {
   try {
     const users = await prisma.user.findMany();
     // แปลง BigInt เป็น String
-    return NextResponse.json(serializeBigInt(users), { status: 200 });
+    const formattedUser = transformBigInt(users);
+    return NextResponse.json(formattedUser(users), { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: 'Error fetching users', details: (error as Error).message }, { status: 500 });
   }
@@ -58,7 +59,8 @@ export async function POST(request: Request) {
     });
 
     // แปลง BigInt เป็น String ใน Response
-    return NextResponse.json(serializeBigInt(user), { status: 201 });
+    const formattedUser = transformBigInt(user);
+    return NextResponse.json(formattedUser, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: 'Error creating user', details: (error as Error).message }, { status: 500 });
   }

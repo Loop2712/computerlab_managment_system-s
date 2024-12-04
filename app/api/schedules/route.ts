@@ -1,31 +1,29 @@
-import prisma from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma'; // ต้องแน่ใจว่า Prisma Client ถูกเซ็ตใน lib/prisma.ts
 
-
-
-export async function GET(){
-    try{
-        const schedules = await prisma.roomSchedule.findMany();
-
-        //ตรวจสอบว่ามีข้อมูลหรือไม่
-        if (!schedules || schedules.length === 0) {
-            return NextResponse.json({ message: 'No schedule found' }, { status: 404 });
-    }
-    return NextResponse.json(schedules);
-}catch (error) {
-    console.error('Error fetching users:', error);
-    return NextResponse.json({ error: 'Failed to fetch schedule' }, { status: 500 });
+export async function GET() {
+  try {
+    const roomSchedules = await prisma.roomSchedule.findMany();
+    return NextResponse.json(roomSchedules);
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to fetch roomSchedules' }, { status: 500 });
   }
 }
 
-export async function POST(req:Request) {
-    const data = await req.json();
-
-    try{
-        const schedules = await prisma.roomSchedule.create({data});
-        return NextResponse.json(schedules);
-    }catch(error){
-        return NextResponse.json({eror:'Failed to Create schedules'},{ status: 500 });
-    }
-    
+export async function POST(request: Request) {
+  try {
+    const body: Room = await request.json();
+    const newRoom = await prisma.room.create({
+      data: {
+        id: body.id,
+        name: body.name,
+        type: body.type,
+        description: body.description || null,
+        requiresApproval: body.requiresApproval,
+      },
+    });
+    return NextResponse.json(newRoom, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to create room' }, { status: 500 });
+  }
 }

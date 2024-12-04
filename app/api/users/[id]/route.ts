@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
-import { serializeBigInt } from '@/utils/BigIntuser';
+import { serializeBigInt } from '@/utils/BigInt';
 
 // Read One User
 export async function GET(request: Request, { params }: { params: { id: string } }) {

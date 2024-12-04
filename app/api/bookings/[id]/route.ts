@@ -1,84 +1,67 @@
-import prisma from "@/lib/prisma";
-import { NextResponse } from "next/server";
+// api/bookings/[id]/route.ts
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import { error } from 'console';
+import { transformBigInt } from '@/utils/BigInt';
 
-export async function GET(req: Request, context: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+  const { id } = await params;
   try {
-    const params = await context.params; // Await params
-
-    const { id } = params;
-    const bookingsId = Number(id);
-
-    if (Number.isNaN(bookingsId)) {
-      return NextResponse.json({ message: "Invalid bookings ID" }, { status: 400 });
-    }
-
-    const bookings = await prisma.booking.findUnique({
-      where: { id: bookingsId },
+    const booking = await prisma.booking.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        user: true,
+        room: true,
+      },
     });
-
-    if (!bookings) {
-      return NextResponse.json({ message: "bookings not found" }, { status: 404 });
+    if (!booking) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
     }
-
-    return NextResponse.json(bookings, { status: 200 });
+    const transfromBooking = transformBigInt(booking)
+    return NextResponse.json(transfromBooking);
   } catch (error) {
-    console.error("Error fetching bookings:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch bookings", details: (error as Error).message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch booking' }, { status: 500 });
   }
 }
 
-export async function PUT(req: Request, context: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
+  const { id } = await params;
+  console.log('Received ID:', id); // Debug ID
   try {
-    const params = await context.params; // Await params
-
-    const { id } = params;
-    const bookingsId = Number(id);
-
-    if (Number.isNaN(bookingsId)) {
-      return NextResponse.json({ message: "Invalid bookings ID" }, { status: 400 });
-    }
-
-    const data = await req.json();
-
-    const bookings = await prisma.booking.update({
-      where: { id: bookingsId },
-      data,
+    const body = await request.json();
+    console.log('Received Body:', body); // Debug Body
+    
+    const updatedBooking = await prisma.booking.update({
+      where: { id: parseInt(id) },
+      data: {
+        userId: BigInt(body.userId),
+        roomId: body.roomId,
+        bookingDate: new Date(body.bookingDate),
+        startTime: new Date(body.startTime),
+        endTime: new Date(body.endTime),
+        status: body.status,
+      },
     });
 
-    return NextResponse.json(bookings);
+    console.log('Updated Booking:', updatedBooking); // Debug Updated Data
+
+    const transformedBooking = transformBigInt(updatedBooking);
+    return NextResponse.json(transformedBooking);
   } catch (error) {
-    console.error("Error updating bookings:", error);
-    return NextResponse.json(
-      { error: "Failed to update bookings", details: (error as Error).message },
-      { status: 500 }
-    );
+    console.error('Error updating booking:', error); // Debug Error
+    return NextResponse.json({ error: 'Failed to update booking', details: error.message }, { status: 500 });
   }
 }
 
-export async function DELETE(req: Request, context: { params: { id: string } }) {
+
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  const { id } = await params;
   try {
-    const params = await context.params; // Await params
-
-    const { id } = params;
-    const bookingsId = Number(id);
-
-    if (Number.isNaN(bookingsId)) {
-      return NextResponse.json({ message: "Invalid bookings ID" }, { status: 400 });
-    }
-
     await prisma.booking.delete({
-      where: { id: bookingsId },
+      where: { id: parseInt(id) },
     });
-
-    return NextResponse.json({ message: "bookings deleted successfully" });
+    return NextResponse.json({ message: 'Booking deleted successfully' });
   } catch (error) {
-    console.error("Error deleting bookings:", error);
-    return NextResponse.json(
-      { error: "Failed to delete bookings", details: (error as Error).message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to delete booking' }, { status: 500 });
   }
 }
